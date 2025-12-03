@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HFT Web3 Wallet Demo</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        pre {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+
+        .status {
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        .success {
+            color: green;
+        }
+
+        .error {
+            color: red;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>HFT Web3 Wallet Demo</h1>
+
+    <div class="card">
+        <h2>1. Connect Wallet</h2>
+        <button id="connectBtn">Connect MetaMask</button>
+        <div id="walletInfo" class="status"></div>
+    </div>
+
+    <div class="card">
+        <h2>2. Authenticate (Sign Message)</h2>
+        <button id="signBtn" disabled>Sign & Login</button>
+        <div id="authStatus" class="status"></div>
+        <pre id="tokenDisplay" style="display:none;"></pre>
+    </div>
+
+    <div class="card">
+        <h2>3. Chain Data</h2>
+        <button id="balanceBtn" disabled>Check Balance</button>
+        <div id="balanceDisplay" class="status"></div>
+    </div>
+
+    <script>
+        let currentAccount = null;
+        let jwtToken = null;
+
+        const connectBtn = document.getElementById('connectBtn');
+        const signBtn = document.getElementById('signBtn');
+        const balanceBtn = document.getElementById('balanceBtn');
+        const walletInfo = document.getElementById('walletInfo');
+        const authStatus = document.getElementById('authStatus');
+        const tokenDisplay = document.getElementById('tokenDisplay');
+        const balanceDisplay = document.getElementById('balanceDisplay');
+
+        // 1. Connect Wallet
+        connectBtn.addEventListener('click', async () => {
+            if (typeof window.ethereum !== 'undefined') {
+                try {
+                    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    currentAccount = accounts[0];
+                    walletInfo.innerHTML = `Connected: <span class="success">${currentAccount}</span>`;
+                    signBtn.disabled = false;
+                    balanceBtn.disabled = false;
+                } catch (error) {
+                    walletInfo.innerHTML = `<span class="error">Error: ${error.message}</span>`;
+                }
+            } else {
+                walletInfo.innerHTML = '<span class="error">MetaMask is not installed!</span>';
+            }
+        });
+
+        // 2. Sign & Login
+        signBtn.addEventListener('click', async () => {
+            try {
+                authStatus.innerHTML = 'Requesting nonce...';
+
+                // Get Nonce
+                const nonceRes = await fetch(`/api/wallet/nonce/${currentAccount}`);
+                const { nonce } = await nonceRes.json();
+
+                // Build Message
+                const message = `Welcome to HFT Trading Platform!\n\nSign this message to verify your wallet ownership.\n\nWallet: ${currentAccount}\nNonce: ${nonce}\nTimestamp: ${Date.now()}\n\nThis request will not trigger a blockchain transaction or cost any gas fees.`;
+
+                // Sign Message
+                const signature = await window.ethereum.request({
+                    method: 'personal_sign',
+                    params: [message, currentAccount]
+                });
+
+                authStatus.innerHTML = 'Verifying signature...';
+
+                // Verify
+                const verifyRes = await fetch('/api/wallet/verify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        walletAddress: currentAccount,
+                        signature: signature,
+                        nonce: nonce
+                    })
+                });
+
+                const verifyData = await verifyRes.json();
+
+                if (verifyData.valid) {
+                    jwtToken = verifyData.token;
+                    authStatus.innerHTML = '<span class="success">Authentication Successful!</span>';
+                    tokenDisplay.style.display = 'block';
+                    tokenDisplay.textContent = `JWT Token:\n${jwtToken}`;
+                } else {
+                    authStatus.innerHTML = '<span class="error">Authentication Failed</span>';
+                }
+
+            } catch (error) {
+                authStatus.innerHTML = `<span class="error">Error: ${error.message}</span>`;
+            }
+        });
+
+        // 3. Check Balance
+        balanceBtn.addEventListener('click', async () => {
+            try {
+                balanceDisplay.innerHTML = 'Fetching balance...';
+                const res = await fetch(`/api/chain/balance/${currentAccount}`);
+                const data = await res.json();
+                balanceDisplay.innerHTML = `Balance: <strong>${data.balance} ${data.currency}</strong>`;
+            } catch (error) {
+                balanceDisplay.innerHTML = `<span class="error">Error fetching balance</span>`;
+            }
+        });
+    </script>
+</body>
+
+</html>
