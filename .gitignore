@@ -34,4 +34,4 @@ build/
 
 ### others ###
 /load-test/
-.log
+*.log
