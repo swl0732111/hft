@@ -8,15 +8,15 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Table;
 
 /**
- * Stores nonces for wallet signature verification.
- * Nonces are single-use tokens to prevent replay attacks.
+ * Stores nonces for wallet signature verification. Nonces are single-use tokens to prevent replay
+ * attacks.
  */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table("wallet_nonces")
-public class WalletNonce {
+@Table("WALLET_NONCES")
+public class WalletNonce implements org.springframework.data.domain.Persistable<String> {
 
     @Id
     private String id;
@@ -50,4 +50,11 @@ public class WalletNonce {
      * Timestamp when nonce was used
      */
     private Long usedAt;
+
+  @org.springframework.data.annotation.Transient @Builder.Default private boolean isNew = true;
+
+  @Override
+  public boolean isNew() {
+    return isNew;
+  }
 }

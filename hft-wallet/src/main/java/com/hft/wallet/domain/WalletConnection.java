@@ -8,15 +8,15 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Table;
 
 /**
- * Represents a Web3 wallet connection.
- * Stores wallet address, chain information, and connection status.
+ * Represents a Web3 wallet connection. Stores wallet address, chain information, and connection
+ * status.
  */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table("wallet_connections")
-public class WalletConnection {
+@Table("WALLET_CONNECTIONS")
+public class WalletConnection implements org.springframework.data.domain.Persistable<String> {
 
     @Id
     private String id;
@@ -65,6 +65,13 @@ public class WalletConnection {
      * Optional wallet label/name
      */
     private String label;
+
+  @org.springframework.data.annotation.Transient @Builder.Default private boolean isNew = true;
+
+  @Override
+  public boolean isNew() {
+    return isNew;
+  }
 
     public enum ConnectionStatus {
         ACTIVE,

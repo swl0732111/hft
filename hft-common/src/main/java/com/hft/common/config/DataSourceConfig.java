@@ -1,12 +1,11 @@
-package com.hft.wallet.config;
+package com.hft.common.config;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import javax.sql.DataSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableScheduling;
-
-import javax.sql.DataSource;
 
 /**
  * DataSource configuration optimized for high-throughput persistence.

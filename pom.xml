@@ -22,8 +22,9 @@
 
     <modules>
         <module>hft-common</module>
-        <module>hft-wallet</module>
         <module>hft-trading</module>
+        <module>hft-wallet</module>
+        <module>hft-dashboard</module>
     </modules>
 
     <properties>
@@ -32,7 +33,7 @@
         <web3j.version>4.9.8</web3j.version>
         <solanaj.version>1.19.3</solanaj.version>
         <quickfixj.version>2.3.1</quickfixj.version>
-        <chronicle-map.version>3.25ea5</chronicle-map.version>
+        <chronicle-map.version>3.27ea1</chronicle-map.version>
         <disruptor.version>4.0.0</disruptor.version>
         <agrona.version>1.21.1</agrona.version>
         <jjwt.version>0.11.5</jjwt.version>
@@ -86,6 +87,11 @@
                 <groupId>net.openhft</groupId>
                 <artifactId>chronicle-map</artifactId>
                 <version>${chronicle-map.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.micrometer</groupId>
+                <artifactId>micrometer-core</artifactId>
+                <version>1.15.3</version> <!-- Use the latest stable version -->
             </dependency>
             <dependency>
                 <groupId>com.lmax</groupId>

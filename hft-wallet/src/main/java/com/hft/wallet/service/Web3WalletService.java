@@ -4,6 +4,12 @@ import com.hft.wallet.domain.WalletConnection;
 import com.hft.wallet.domain.WalletNonce;
 import com.hft.wallet.repository.WalletConnectionRepository;
 import com.hft.wallet.repository.WalletNonceRepository;
+import java.math.BigInteger;
+import java.security.SignatureException;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -11,13 +17,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.web3j.crypto.Keys;
 import org.web3j.crypto.Sign;
 import org.web3j.utils.Numeric;
-
-import java.math.BigInteger;
-import java.security.SignatureException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
 
 /**
  * Service for Web3 wallet operations.
@@ -42,13 +41,14 @@ public class Web3WalletService {
         String checksumAddress = toChecksumAddress(walletAddress);
         long now = System.currentTimeMillis();
 
-        // Invalidate any existing nonces
-        walletNonceRepository.findByWalletAddressAndUsedFalseAndExpiresAtGreaterThan(
-                checksumAddress, now).ifPresent(existingNonce -> {
-                    existingNonce.setUsed(true);
-                    existingNonce.setUsedAt(now);
-                    walletNonceRepository.save(existingNonce);
-                });
+    // Delete any existing unused nonces for this wallet
+    walletNonceRepository
+        .findByWalletAddressAndUsedFalseAndExpiresAtGreaterThan(checksumAddress, now)
+        .ifPresent(
+            existingNonce -> {
+              walletNonceRepository.delete(existingNonce);
+              log.debug("Deleted existing nonce for wallet: {}", checksumAddress);
+            });
 
         // Generate new nonce
         String nonce = UUID.randomUUID().toString();
@@ -102,6 +102,7 @@ public class Web3WalletService {
                 // Mark nonce as used
                 walletNonce.setUsed(true);
                 walletNonce.setUsedAt(now);
+        walletNonce.setNew(false);
                 walletNonceRepository.save(walletNonce);
                 log.info("Signature verified for wallet: {}", checksumAddress);
             } else {
@@ -133,6 +134,7 @@ public class Web3WalletService {
             connection.setAccountId(accountId);
             connection.setStatus(WalletConnection.ConnectionStatus.ACTIVE);
             connection.setLastActiveAt(now);
+      connection.setNew(false);
             return walletConnectionRepository.save(connection);
         }
 
@@ -170,12 +172,15 @@ public class Web3WalletService {
     @Transactional
     public void disconnectWallet(String walletAddress, String chain) {
         String checksumAddress = toChecksumAddress(walletAddress);
-        walletConnectionRepository.findByWalletAddressAndChain(checksumAddress, chain)
-                .ifPresent(connection -> {
-                    connection.setStatus(WalletConnection.ConnectionStatus.DISCONNECTED);
-                    walletConnectionRepository.save(connection);
-                    log.info("Disconnected wallet: {}", checksumAddress);
-                });
+    walletConnectionRepository
+        .findByWalletAddressAndChain(checksumAddress, chain)
+        .ifPresent(
+            connection -> {
+              connection.setStatus(WalletConnection.ConnectionStatus.DISCONNECTED);
+              connection.setNew(false);
+              walletConnectionRepository.save(connection);
+              log.info("Disconnected wallet: {}", checksumAddress);
+            });
     }
 
     /**

@@ -34,4 +34,35 @@ public class MarketDataPublisher {
         // For demonstration, we'll just print that we would send it.
         System.out.println("Publishing FIX Market Data: " + message);
     }
+
+  /** Publish trade with individual parameters (for event-based publishing). */
+  public void publishTrade(
+      String symbol,
+      long priceScaled,
+      long quantityScaled,
+      long timestamp,
+      String makerOrderId,
+      String takerOrderId) {
+    MarketDataIncrementalRefresh message = new MarketDataIncrementalRefresh();
+    message.set(new MDReqID("AUTO"));
+
+    MarketDataIncrementalRefresh.NoMDEntries group = new MarketDataIncrementalRefresh.NoMDEntries();
+    group.set(new MDUpdateAction(MDUpdateAction.NEW));
+    group.set(new MDEntryType(MDEntryType.TRADE));
+
+    // Convert scaled price/quantity to double
+    double price = priceScaled / 100000000.0;
+    double quantity = quantityScaled / 100000000.0;
+
+    group.set(new MDEntryPx(price));
+    group.set(new MDEntrySize(quantity));
+    group.set(new Symbol(symbol));
+    // Note: MDEntryTime requires LocalTime, not Date. Skipping for now.
+
+    message.addGroup(group);
+
+    // Broadcast to all sessions
+    System.out.println(
+        "Publishing FIX Market Data: " + symbol + " @ " + price + " qty " + quantity);
+  }
 }
