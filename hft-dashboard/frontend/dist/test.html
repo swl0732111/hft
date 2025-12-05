@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>Dashboard Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+
+        .test-box {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .success {
+            color: green;
+        }
+
+        .error {
+            color: red;
+        }
+
+        pre {
+            background: #f0f0f0;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+
+<body>
+<h1>HFT Dashboard Connection Test</h1>
+
+<div class="test-box">
+    <h2>Frontend Server</h2>
+    <p id="frontend-status">Testing...</p>
+</div>
+
+<div class="test-box">
+    <h2>Backend API</h2>
+    <p id="backend-status">Testing...</p>
+    <pre id="api-response"></pre>
+</div>
+
+<div class="test-box">
+    <h2>React App</h2>
+    <p>If you see this page, the server is running but React might not be loading.</p>
+    <p>Check browser console (F12) for JavaScript errors.</p>
+</div>
+
+<script>
+    // Test frontend
+    document.getElementById('frontend-status').innerHTML =
+        '<span class="success">✓ Frontend server is running (you can see this page)</span>';
+
+    // Test backend API
+    fetch('http://localhost:8081/api/dashboard/health')
+        .then(response => response.text())
+        .then(data => {
+            document.getElementById('backend-status').innerHTML =
+                '<span class="success">✓ Backend API is running</span>';
+            document.getElementById('api-response').textContent = data;
+        })
+        .catch(error => {
+            document.getElementById('backend-status').innerHTML =
+                '<span class="error">✗ Backend API connection failed: ' + error.message + '</span>';
+        });
+
+    // Test API data
+    fetch('http://localhost:8081/api/dashboard/overview?accountId=test-account-1')
+        .then(response => response.json())
+        .then(data => {
+            console.log('Dashboard data:', data);
+            const div = document.createElement('div');
+            div.className = 'test-box';
+            div.innerHTML = '<h2>Dashboard Data</h2><pre>' +
+                JSON.stringify(data, null, 2) + '</pre>';
+            document.body.appendChild(div);
+        })
+        .catch(error => {
+            console.error('Failed to fetch dashboard data:', error);
+        });
+</script>
+</body>
+
+</html>

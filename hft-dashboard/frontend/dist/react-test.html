@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>React Test</title>
+</head>
+
+<body>
+<div id="test-root"></div>
+<script type="module">
+    import React from '/node_modules/.vite/deps/react.js?v=bad5f852';
+    import ReactDOM from '/node_modules/.vite/deps/react-dom_client.js?v=bad5f852';
+
+    const App = () => {
+        return React.createElement('div', { style: { padding: '20px', fontFamily: 'Arial' } },
+            React.createElement('h1', null, 'React is Working!'),
+            React.createElement('p', null, 'If you see this, React can render.'),
+            React.createElement('p', null, 'The main app might have an error in App.jsx or its components.')
+        );
+    };
+
+    ReactDOM.createRoot(document.getElementById('test-root')).render(
+        React.createElement(App)
+    );
+</script>
+</body>
+
+</html>
