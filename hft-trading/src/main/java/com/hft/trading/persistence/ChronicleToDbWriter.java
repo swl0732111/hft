@@ -7,10 +7,12 @@ import com.hft.trading.repository.OrderRepository;
 import com.hft.trading.repository.TradeRepository;
 import com.hft.trading.repository.TransactionLogRepository;
 import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.openhft.chronicle.core.io.ClosedIllegalStateException;
 import net.openhft.chronicle.queue.ExcerptTailer;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -39,13 +41,14 @@ public class ChronicleToDbWriter {
   private final List<Order> deadLetterQueue = new ArrayList<>();
   private ExcerptTailer tailer;
   private volatile boolean running = true;
+  private Thread writerThread;
 
   @PostConstruct
   public void init() {
     log.info("ChronicleToDbWriter initializing...");
 
     // Start background thread
-    Thread writerThread = new Thread(this::processQueue, "chronicle-db-writer");
+    writerThread = new Thread(this::processQueue, "chronicle-db-writer");
     writerThread.setDaemon(true);
     writerThread.start();
   }
@@ -102,6 +105,9 @@ public class ChronicleToDbWriter {
 
       } catch (InterruptedException e) {
         log.info("Chronicle-to-DB writer interrupted");
+        break;
+      } catch (ClosedIllegalStateException e) {
+        log.info("Chronicle queue closed, stopping writer thread");
         break;
       } catch (Exception e) {
         log.error("Error in Chronicle-to-DB writer", e);
@@ -207,9 +213,19 @@ public class ChronicleToDbWriter {
   }
 
   /** Shutdown hook. */
+  @PreDestroy
   public void shutdown() {
     running = false;
     log.info("Chronicle-to-DB writer shutting down");
+
+    if (writerThread != null) {
+      try {
+        writerThread.join(2000); // Wait up to 2 seconds for thread to finish
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+        log.warn("Interrupted while waiting for writer thread to stop");
+      }
+    }
 
     // Log dead letter queue status
     synchronized (deadLetterQueue) {
