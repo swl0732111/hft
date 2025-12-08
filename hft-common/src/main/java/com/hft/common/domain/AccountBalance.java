@@ -19,6 +19,8 @@ public class AccountBalance {
     private String id;
     private String accountId;
     private String asset;
+    @Builder.Default
+    private AccountType type = AccountType.SPOT;
     private BigDecimal availableBalance;
     private BigDecimal lockedBalance;
 }

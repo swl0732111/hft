@@ -3,7 +3,7 @@ package com.hft.trading.service;
 import com.hft.common.domain.Account;
 import com.hft.common.domain.TierConfig;
 import com.hft.common.domain.UserTier;
-import com.hft.trading.repository.AccountRepository;
+import com.hft.account.repository.AccountRepository;
 import com.hft.trading.repository.TierConfigRepository;
 import com.hft.trading.repository.TradingVolumeStatsRepository;
 import java.time.LocalDate;
@@ -16,7 +16,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Service for managing user tier calculations and upgrades. Calculates tiers based on 30-day
+ * Service for managing user tier calculations and upgrades. Calculates tiers
+ * based on 30-day
  * rolling trading volume.
  */
 @Slf4j
@@ -66,17 +67,17 @@ public class TierService {
   }
 
   /**
-   * Update account tier if it has changed. Respects tier locks (e.g., promotional tiers).
+   * Update account tier if it has changed. Respects tier locks (e.g., promotional
+   * tiers).
    *
    * @param accountId Account ID
    * @return True if tier was updated
    */
   @Transactional
   public boolean updateAccountTier(String accountId) {
-    Account account =
-        accountRepository
-            .findById(accountId)
-            .orElseThrow(() -> new IllegalArgumentException("Account not found: " + accountId));
+    Account account = accountRepository
+        .findById(accountId)
+        .orElseThrow(() -> new IllegalArgumentException("Account not found: " + accountId));
 
     // Don't update if tier is locked (promotional tier)
     if (account.isTierLocked()) {
@@ -119,10 +120,9 @@ public class TierService {
    * @return Volume needed to reach next tier (scaled), or 0 if at max tier
    */
   public long getVolumeToNextTier(String accountId) {
-    Account account =
-        accountRepository
-            .findById(accountId)
-            .orElseThrow(() -> new IllegalArgumentException("Account not found: " + accountId));
+    Account account = accountRepository
+        .findById(accountId)
+        .orElseThrow(() -> new IllegalArgumentException("Account not found: " + accountId));
 
     UserTier currentTier = account.getCurrentTierOrDefault();
     long currentVolume = account.getVolume30dScaled();
@@ -131,18 +131,18 @@ public class TierService {
   }
 
   /**
-   * Manually set tier for an account (admin function). Locks tier until specified timestamp.
+   * Manually set tier for an account (admin function). Locks tier until specified
+   * timestamp.
    *
-   * @param accountId Account ID
-   * @param tier Tier to set
+   * @param accountId       Account ID
+   * @param tier            Tier to set
    * @param lockUntilMillis Timestamp until which tier is locked
    */
   @Transactional
   public void setTierManually(String accountId, UserTier tier, long lockUntilMillis) {
-    Account account =
-        accountRepository
-            .findById(accountId)
-            .orElseThrow(() -> new IllegalArgumentException("Account not found: " + accountId));
+    Account account = accountRepository
+        .findById(accountId)
+        .orElseThrow(() -> new IllegalArgumentException("Account not found: " + accountId));
 
     account.setCurrentTier(tier);
     account.setTierLockedUntil(lockUntilMillis);
@@ -154,16 +154,16 @@ public class TierService {
   }
 
   /**
-   * Unlock tier for an account (admin function). Allows automatic tier calculation to resume.
+   * Unlock tier for an account (admin function). Allows automatic tier
+   * calculation to resume.
    *
    * @param accountId Account ID
    */
   @Transactional
   public void unlockTier(String accountId) {
-    Account account =
-        accountRepository
-            .findById(accountId)
-            .orElseThrow(() -> new IllegalArgumentException("Account not found: " + accountId));
+    Account account = accountRepository
+        .findById(accountId)
+        .orElseThrow(() -> new IllegalArgumentException("Account not found: " + accountId));
 
     account.setTierLockedUntil(null);
     accountRepository.save(account);
@@ -174,7 +174,9 @@ public class TierService {
     updateAccountTier(accountId);
   }
 
-  /** Scheduled job to recalculate all account tiers daily. Runs at 2 AM every day. */
+  /**
+   * Scheduled job to recalculate all account tiers daily. Runs at 2 AM every day.
+   */
   @Scheduled(cron = "0 0 2 * * *")
   @Transactional
   public void recalculateAllTiers() {

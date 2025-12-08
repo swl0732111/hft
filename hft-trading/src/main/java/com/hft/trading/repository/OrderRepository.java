@@ -10,4 +10,6 @@ import java.util.List;
 @Repository
 public interface OrderRepository extends CrudRepository<Order, String> {
     List<Order> findBySymbolAndQuantityGreaterThan(String symbol, BigDecimal quantity);
+
+    List<Order> findByAccountId(String accountId);
 }

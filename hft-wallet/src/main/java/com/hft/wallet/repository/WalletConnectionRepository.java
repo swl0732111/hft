@@ -16,6 +16,8 @@ public interface WalletConnectionRepository extends CrudRepository<WalletConnect
     /**
      * Find wallet connection by wallet address and chain
      */
+    Optional<WalletConnection> findByWalletAddress(String walletAddress);
+
     Optional<WalletConnection> findByWalletAddressAndChain(String walletAddress, String chain);
 
     /**

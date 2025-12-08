@@ -42,10 +42,13 @@ CREATE TABLE IF NOT EXISTS account_balances (
     id VARCHAR(255) PRIMARY KEY,
     account_id VARCHAR(255),
     asset VARCHAR(50),
+    type VARCHAR(20) DEFAULT 'SPOT',
     available_balance DECIMAL(20, 8),
     locked_balance DECIMAL(20, 8) DEFAULT 0,
     FOREIGN KEY (account_id) REFERENCES accounts(id)
 );
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_account_balances_unique ON account_balances(account_id, asset, type);
 
 CREATE TABLE IF NOT EXISTS fee_config (
     id VARCHAR(255) PRIMARY KEY,

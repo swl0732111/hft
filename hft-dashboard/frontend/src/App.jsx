@@ -5,6 +5,8 @@ import DashboardOverview from './components/DashboardOverview';
 import TierProgress from './components/TierProgress';
 import VolumeChart from './components/VolumeChart';
 import TradeDistribution from './components/TradeDistribution';
+import TradeHistory from './components/TradeHistory';
+import TradeForm from './components/TradeForm';
 import ProfitLossChart from './components/ProfitLossChart';
 import PerformanceMetrics from './components/PerformanceMetrics';
 import WalletPanel from './components/WalletPanel';
@@ -19,6 +21,7 @@ function App() {
     const [tierInfo, setTierInfo] = useState(null);
     const [volumeChart, setVolumeChart] = useState(null);
     const [tradeDistribution, setTradeDistribution] = useState(null);
+    const [tradeHistory, setTradeHistory] = useState(null);
     const [profitLoss, setProfitLoss] = useState(null);
     const [performanceMetrics, setPerformanceMetrics] = useState(null);
 
@@ -89,15 +92,17 @@ function App() {
             setVolumeChart(chartRes.data);
 
             // Load extended analytics data
-            const [distRes, pnlRes, perfRes] = await Promise.all([
+            const [distRes, pnlRes, perfRes, historyRes] = await Promise.all([
                 dashboardAPI.getTradeDistribution(accountId),
                 dashboardAPI.getProfitLoss(accountId),
                 dashboardAPI.getPerformanceMetrics(accountId),
+                dashboardAPI.getTradeHistory(accountId),
             ]);
 
             setTradeDistribution(distRes.data);
             setProfitLoss(pnlRes.data);
             setPerformanceMetrics(perfRes.data);
+            setTradeHistory(historyRes.data);
 
         } catch (error) {
             console.error('Failed to load dashboard data:', error);
@@ -108,6 +113,7 @@ function App() {
 
     const tabs = [
         { id: 'overview', label: 'Overview' },
+        { id: 'trade', label: 'Trade' },
         { id: 'analytics', label: 'Analytics' },
         { id: 'performance', label: 'Performance' },
         { id: 'wallet', label: 'Wallet' },
@@ -217,10 +223,24 @@ function App() {
                                 </>
                             )}
 
+                            {activeTab === 'trade' && (
+                                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                                    <div className="lg:col-span-1">
+                                        <TradeForm accountId={accountId} />
+                                    </div>
+                                    <div className="lg:col-span-2">
+                                        <TradeHistory trades={tradeHistory} />
+                                    </div>
+                                </div>
+                            )}
+
                             {activeTab === 'analytics' && (
                                 <>
                                     <ProfitLossChart data={profitLoss} />
                                     <TradeDistribution data={tradeDistribution} />
+                                    <div className="mt-8">
+                                        <TradeHistory trades={tradeHistory} />
+                                    </div>
                                 </>
                             )}
 

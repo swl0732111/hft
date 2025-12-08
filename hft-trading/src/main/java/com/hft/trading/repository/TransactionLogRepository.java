@@ -11,4 +11,6 @@ public interface TransactionLogRepository extends CrudRepository<TransactionLog,
     List<TransactionLog> findByOrderId(String orderId);
 
     List<TransactionLog> findBySymbol(String symbol);
+
+    List<TransactionLog> findByOrderIdIn(List<String> orderIds);
 }

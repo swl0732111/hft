@@ -14,7 +14,8 @@ import java.math.BigDecimal;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.hft.trading.repository.OrderRepository;
-import com.hft.trading.service.AccountService;
+import com.hft.account.service.AccountService;
+import com.hft.trading.service.RiskControlService;
 
 class OrderValidationTest {
 
@@ -23,6 +24,7 @@ class OrderValidationTest {
     private OrderRepository orderRepository;
     private AccountService accountService;
     private RingBuffer ringBuffer;
+    private RiskControlService riskControlService;
 
     @BeforeEach
     void setUp() {
@@ -30,7 +32,9 @@ class OrderValidationTest {
         orderRepository = Mockito.mock(OrderRepository.class);
         accountService = Mockito.mock(AccountService.class);
         ringBuffer = Mockito.mock(RingBuffer.class);
-        orderService = new OrderService(matchingEngine, orderRepository, accountService, ringBuffer);
+        riskControlService = Mockito.mock(RiskControlService.class);
+        orderService = new OrderService(matchingEngine, orderRepository, accountService, ringBuffer,
+                riskControlService);
     }
 
     @Test

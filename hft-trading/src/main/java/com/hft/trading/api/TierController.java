@@ -4,7 +4,7 @@ import com.hft.common.domain.Account;
 import com.hft.common.domain.TierConfig;
 import com.hft.common.domain.UserTier;
 import com.hft.common.util.FixedPointMath;
-import com.hft.trading.repository.AccountRepository;
+import com.hft.account.repository.AccountRepository;
 import com.hft.trading.service.TierService;
 import java.util.Arrays;
 import java.util.List;
@@ -27,10 +27,9 @@ public class TierController {
   /** Get current user tier information. */
   @GetMapping("/current")
   public ResponseEntity<TierInfoResponse> getCurrentTier(@RequestParam String accountId) {
-    Account account =
-        accountRepository
-            .findById(accountId)
-            .orElseThrow(() -> new IllegalArgumentException("Account not found"));
+    Account account = accountRepository
+        .findById(accountId)
+        .orElseThrow(() -> new IllegalArgumentException("Account not found"));
 
     UserTier currentTier = account.getCurrentTierOrDefault();
     TierConfig tierConfig = tierService.getTierConfig(currentTier);
@@ -57,30 +56,29 @@ public class TierController {
   /** Get all available tier benefits. */
   @GetMapping("/benefits")
   public ResponseEntity<List<TierBenefitsResponse>> getAllTierBenefits() {
-    List<TierBenefitsResponse> benefits =
-        Arrays.stream(UserTier.values())
-            .map(
-                tier -> {
-                  TierConfig config = tierService.getTierConfig(tier);
-                  return TierBenefitsResponse.builder()
-                      .tier(tier)
-                      .tierLevel(tier.getLevel())
-                      .tierName(tier.name())
-                      .description(tier.getDescription())
-                      .minVolume(tier.getMinVolume())
-                      .maxVolume(tier.getMaxVolume())
-                      .makerFeeBps(config.getMakerFeeBps())
-                      .takerFeeBps(config.getTakerFeeBps())
-                      .makerFeePercent(tier.getMakerFeePercent())
-                      .takerFeePercent(tier.getTakerFeePercent())
-                      .apiRateLimitRps(config.getApiRateLimitRps())
-                      .supportPriority(config.getSupportPriority())
-                      .dedicatedAccountManager(config.isDedicatedAccountManager())
-                      .priorityWithdrawal(config.isPriorityWithdrawal())
-                      .customApiSolutions(config.isCustomApiSolutions())
-                      .build();
-                })
-            .collect(Collectors.toList());
+    List<TierBenefitsResponse> benefits = Arrays.stream(UserTier.values())
+        .map(
+            tier -> {
+              TierConfig config = tierService.getTierConfig(tier);
+              return TierBenefitsResponse.builder()
+                  .tier(tier)
+                  .tierLevel(tier.getLevel())
+                  .tierName(tier.name())
+                  .description(tier.getDescription())
+                  .minVolume(tier.getMinVolume())
+                  .maxVolume(tier.getMaxVolume())
+                  .makerFeeBps(config.getMakerFeeBps())
+                  .takerFeeBps(config.getTakerFeeBps())
+                  .makerFeePercent(tier.getMakerFeePercent())
+                  .takerFeePercent(tier.getTakerFeePercent())
+                  .apiRateLimitRps(config.getApiRateLimitRps())
+                  .supportPriority(config.getSupportPriority())
+                  .dedicatedAccountManager(config.isDedicatedAccountManager())
+                  .priorityWithdrawal(config.isPriorityWithdrawal())
+                  .customApiSolutions(config.isCustomApiSolutions())
+                  .build();
+            })
+        .collect(Collectors.toList());
 
     return ResponseEntity.ok(benefits);
   }
@@ -88,10 +86,9 @@ public class TierController {
   /** Get 30-day volume statistics. */
   @GetMapping("/volume")
   public ResponseEntity<VolumeStatsResponse> getVolumeStats(@RequestParam String accountId) {
-    Account account =
-        accountRepository
-            .findById(accountId)
-            .orElseThrow(() -> new IllegalArgumentException("Account not found"));
+    Account account = accountRepository
+        .findById(accountId)
+        .orElseThrow(() -> new IllegalArgumentException("Account not found"));
 
     long volume30d = tierService.calculate30DayVolume(accountId);
     UserTier currentTier = account.getCurrentTierOrDefault();
@@ -108,10 +105,9 @@ public class TierController {
   /** Get progress to next tier. */
   @GetMapping("/progress")
   public ResponseEntity<TierProgressResponse> getTierProgress(@RequestParam String accountId) {
-    Account account =
-        accountRepository
-            .findById(accountId)
-            .orElseThrow(() -> new IllegalArgumentException("Account not found"));
+    Account account = accountRepository
+        .findById(accountId)
+        .orElseThrow(() -> new IllegalArgumentException("Account not found"));
 
     UserTier currentTier = account.getCurrentTierOrDefault();
     UserTier nextTier = currentTier.getNextTier();
@@ -143,10 +139,9 @@ public class TierController {
       @RequestParam UserTier tier,
       @RequestParam(required = false) Long lockUntilMillis) {
 
-    long lockUntil =
-        lockUntilMillis != null
-            ? lockUntilMillis
-            : System.currentTimeMillis() + (30L * 24 * 60 * 60 * 1000); // 30 days default
+    long lockUntil = lockUntilMillis != null
+        ? lockUntilMillis
+        : System.currentTimeMillis() + (30L * 24 * 60 * 60 * 1000); // 30 days default
 
     tierService.setTierManually(accountId, tier, lockUntil);
     return ResponseEntity.ok("Tier set to " + tier + " for account " + accountId);

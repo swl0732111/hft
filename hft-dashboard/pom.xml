@@ -32,6 +32,11 @@
             <artifactId>hft-wallet</artifactId>
             <version>0.0.1-SNAPSHOT</version>
         </dependency>
+        <dependency>
+            <groupId>com.hft</groupId>
+            <artifactId>hft-account</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
         <!-- Chronicle Queue - Required by hft-trading -->
         <dependency>

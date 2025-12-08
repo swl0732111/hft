@@ -2,6 +2,7 @@ package com.hft.trading.persistence;
 
 import com.hft.trading.domain.Order;
 import com.hft.trading.repository.OrderRepository;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 

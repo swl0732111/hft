@@ -19,7 +19,10 @@ export const dashboardAPI = {
         axios.get(`${API_BASE_URL}/profit-loss`, { params: { accountId } }),
 
     getPerformanceMetrics: (accountId) =>
-        axios.get(`${API_BASE_URL}/performance-metrics`, { params: { accountId } }),
+        axios.get(`${API_BASE_URL}/${accountId}/performance`),
+
+    getTradeHistory: (accountId) =>
+        axios.get(`${API_BASE_URL}/${accountId}/trades`),
 
     // Wallet API
     getWalletBalance: (accountId) =>
@@ -49,4 +52,8 @@ export const dashboardAPI = {
 
     disconnectWallet: (data) =>
         axios.post(`${API_BASE_URL.replace('/dashboard', '')}/wallet/disconnect`, data),
+
+    // Trading API
+    submitOrder: (orderData) =>
+        axios.post(`${API_BASE_URL.replace('/dashboard', '')}/orders`, orderData),
 };

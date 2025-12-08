@@ -21,6 +21,11 @@
             <groupId>com.hft</groupId>
             <artifactId>hft-common</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.hft</groupId>
+            <artifactId>hft-account</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
         <!-- Spring Boot -->
         <dependency>

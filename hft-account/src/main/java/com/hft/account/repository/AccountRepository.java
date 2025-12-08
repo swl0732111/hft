@@ -1,4 +1,4 @@
-package com.hft.trading.repository;
+package com.hft.account.repository;
 
 import com.hft.common.domain.Account;
 import org.springframework.data.repository.CrudRepository;

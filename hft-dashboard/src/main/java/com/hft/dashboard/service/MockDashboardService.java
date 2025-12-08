@@ -12,7 +12,8 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
 /**
- * Mock dashboard service for demonstration purposes. Returns sample data when actual database is
+ * Mock dashboard service for demonstration purposes. Returns sample data when
+ * actual database is
  * not available.
  */
 @Slf4j
@@ -20,14 +21,14 @@ import org.springframework.stereotype.Service;
 @Primary
 public class MockDashboardService extends DashboardService {
 
-  private static final String PLATFORM_HOT_WALLET_ADDRESS =
-      "0x71C7656EC7ab88b098defB751B7401B5f6d8976F";
+  private static final String PLATFORM_HOT_WALLET_ADDRESS = "0x71C7656EC7ab88b098defB751B7401B5f6d8976F";
   private final Map<String, WalletBalanceDTO> mockBalances = new HashMap<>();
   private final Map<String, List<WalletTransactionDTO>> mockTransactions = new HashMap<>();
-  @Autowired private Web3WalletService web3WalletService;
+  @Autowired
+  private Web3WalletService web3WalletService;
 
   public MockDashboardService() {
-    super(null, null, null);
+    super(null, null, null, null, null);
   }
 
   @Override
@@ -94,12 +95,11 @@ public class MockDashboardService extends DashboardService {
     }
 
     // Build tier thresholds
-    List<VolumeChartDTO.TierThresholdDTO> thresholds =
-        Arrays.asList(
-            VolumeChartDTO.TierThresholdDTO.builder().tier("VIP1").volume(1000000.0).build(),
-            VolumeChartDTO.TierThresholdDTO.builder().tier("VIP2").volume(3500000.0).build(),
-            VolumeChartDTO.TierThresholdDTO.builder().tier("VIP3").volume(5000000.0).build(),
-            VolumeChartDTO.TierThresholdDTO.builder().tier("VIP4").volume(10000000.0).build());
+    List<VolumeChartDTO.TierThresholdDTO> thresholds = Arrays.asList(
+        VolumeChartDTO.TierThresholdDTO.builder().tier("VIP1").volume(1000000.0).build(),
+        VolumeChartDTO.TierThresholdDTO.builder().tier("VIP2").volume(3500000.0).build(),
+        VolumeChartDTO.TierThresholdDTO.builder().tier("VIP3").volume(5000000.0).build(),
+        VolumeChartDTO.TierThresholdDTO.builder().tier("VIP4").volume(10000000.0).build());
 
     return VolumeChartDTO.builder().data(dailyData).tierThresholds(thresholds).build();
   }
@@ -152,55 +152,87 @@ public class MockDashboardService extends DashboardService {
     }
 
     // Trading pair distribution
-    List<TradeDistributionDTO.PairDistribution> pairDist =
-        Arrays.asList(
-            TradeDistributionDTO.PairDistribution.builder()
-                .symbol("BTC/USDT")
-                .volume(1800000)
-                .percentage(42.35)
-                .tradeCount(450)
-                .build(),
-            TradeDistributionDTO.PairDistribution.builder()
-                .symbol("ETH/USDT")
-                .volume(1200000)
-                .percentage(28.24)
-                .tradeCount(380)
-                .build(),
-            TradeDistributionDTO.PairDistribution.builder()
-                .symbol("SOL/USDT")
-                .volume(650000)
-                .percentage(15.29)
-                .tradeCount(220)
-                .build(),
-            TradeDistributionDTO.PairDistribution.builder()
-                .symbol("AVAX/USDT")
-                .volume(400000)
-                .percentage(9.41)
-                .tradeCount(106)
-                .build(),
-            TradeDistributionDTO.PairDistribution.builder()
-                .symbol("Others")
-                .volume(200000)
-                .percentage(4.71)
-                .tradeCount(100)
-                .build());
+    List<TradeDistributionDTO.PairDistribution> pairDist = Arrays.asList(
+        TradeDistributionDTO.PairDistribution.builder()
+            .symbol("BTC/USDT")
+            .volume(1800000)
+            .percentage(42.35)
+            .tradeCount(450)
+            .build(),
+        TradeDistributionDTO.PairDistribution.builder()
+            .symbol("ETH/USDT")
+            .volume(1200000)
+            .percentage(28.24)
+            .tradeCount(380)
+            .build(),
+        TradeDistributionDTO.PairDistribution.builder()
+            .symbol("SOL/USDT")
+            .volume(650000)
+            .percentage(15.29)
+            .tradeCount(220)
+            .build(),
+        TradeDistributionDTO.PairDistribution.builder()
+            .symbol("AVAX/USDT")
+            .volume(400000)
+            .percentage(9.41)
+            .tradeCount(106)
+            .build(),
+        TradeDistributionDTO.PairDistribution.builder()
+            .symbol("Others")
+            .volume(200000)
+            .percentage(4.71)
+            .tradeCount(100)
+            .build());
 
     // Buy/Sell ratio
-    TradeDistributionDTO.BuySellRatio buySellRatio =
-        TradeDistributionDTO.BuySellRatio.builder()
-            .buyVolume(2300000)
-            .sellVolume(1950000)
-            .buyCount(620)
-            .sellCount(536)
-            .buyPercentage(54.12)
-            .sellPercentage(45.88)
-            .build();
+    TradeDistributionDTO.BuySellRatio buySellRatio = TradeDistributionDTO.BuySellRatio.builder()
+        .buyVolume(2300000)
+        .sellVolume(1950000)
+        .buyCount(620)
+        .sellCount(536)
+        .buyPercentage(54.12)
+        .sellPercentage(45.88)
+        .build();
 
     return TradeDistributionDTO.builder()
         .hourlyDistribution(hourlyDist)
         .pairDistribution(pairDist)
         .buySellRatio(buySellRatio)
         .build();
+  }
+
+  /** Get trade history for an account. */
+  @Override
+  public List<TradeHistoryDTO> getTradeHistory(String accountId) {
+    log.info("Returning mock trade history for account: {}", accountId);
+
+    List<TradeHistoryDTO> history = new ArrayList<>();
+    Random random = new Random(42);
+    long currentTime = System.currentTimeMillis();
+
+    // Generate 20 mock trades
+    for (int i = 0; i < 20; i++) {
+      String symbol = random.nextBoolean() ? "BTC/USDT" : "ETH/USDT";
+      String type = random.nextBoolean() ? "BUY" : "SELL";
+      double price = "BTC/USDT".equals(symbol) ? 50000 + random.nextDouble() * 1000 : 3000 + random.nextDouble() * 100;
+      double amount = "BTC/USDT".equals(symbol) ? 0.1 + random.nextDouble() * 0.5 : 1.0 + random.nextDouble() * 5.0;
+
+      history.add(TradeHistoryDTO.builder()
+          .transactionId(UUID.randomUUID().toString())
+          .orderId(UUID.randomUUID().toString())
+          .symbol(symbol)
+          .type(type)
+          .amount(amount)
+          .price(price)
+          .status("FILLED")
+          .timestamp(currentTime - (long) (random.nextDouble() * 7 * 24 * 60 * 60 * 1000)) // Random time in last 7 days
+          .txHash("0x" + UUID.randomUUID().toString().replace("-", "").substring(0, 16))
+          .asset(symbol.split("/")[0])
+          .build());
+    }
+
+    history.sort(Comparator.comparingLong(TradeHistoryDTO::getTimestamp).reversed());
+    return history;
   }
 
   // --- Wallet Mock Data ---
@@ -226,8 +258,10 @@ public class MockDashboardService extends DashboardService {
       double feesPaid = 100 + random.nextDouble() * 150;
 
       cumulativeRealized += realizedPnL;
-      if (realizedPnL > 0) profitableDays++;
-      else losingDays++;
+      if (realizedPnL > 0)
+        profitableDays++;
+      else
+        losingDays++;
 
       dailyPnL.add(
           ProfitLossDTO.DailyPnL.builder()
@@ -248,28 +282,25 @@ public class MockDashboardService extends DashboardService {
     }
 
     double totalFees = dailyFees.stream().mapToDouble(ProfitLossDTO.DailyFee::getFeesPaid).sum();
-    double totalSavings =
-        dailyFees.stream().mapToDouble(ProfitLossDTO.DailyFee::getFeeSavings).sum();
+    double totalSavings = dailyFees.stream().mapToDouble(ProfitLossDTO.DailyFee::getFeeSavings).sum();
 
-    ProfitLossDTO.CumulativePnL cumulativePnL =
-        ProfitLossDTO.CumulativePnL.builder()
-            .totalRealized(cumulativeRealized)
-            .totalUnrealized(500) // Current open positions
-            .totalFees(totalFees)
-            .netProfit(cumulativeRealized - totalFees)
-            .roi(((cumulativeRealized - totalFees) / 100000) * 100) // Assuming 100k initial capital
-            .profitableDays(profitableDays)
-            .losingDays(losingDays)
-            .build();
+    ProfitLossDTO.CumulativePnL cumulativePnL = ProfitLossDTO.CumulativePnL.builder()
+        .totalRealized(cumulativeRealized)
+        .totalUnrealized(500) // Current open positions
+        .totalFees(totalFees)
+        .netProfit(cumulativeRealized - totalFees)
+        .roi(((cumulativeRealized - totalFees) / 100000) * 100) // Assuming 100k initial capital
+        .profitableDays(profitableDays)
+        .losingDays(losingDays)
+        .build();
 
-    ProfitLossDTO.FeeAnalysis feeAnalysis =
-        ProfitLossDTO.FeeAnalysis.builder()
-            .totalFeesPaid(totalFees)
-            .totalFeeSavings(totalSavings)
-            .avgFeePerTrade(totalFees / 1156) // Total trades from overview
-            .feeAsPercentOfVolume((totalFees / 4250000) * 100)
-            .dailyFees(dailyFees)
-            .build();
+    ProfitLossDTO.FeeAnalysis feeAnalysis = ProfitLossDTO.FeeAnalysis.builder()
+        .totalFeesPaid(totalFees)
+        .totalFeeSavings(totalSavings)
+        .avgFeePerTrade(totalFees / 1156) // Total trades from overview
+        .feeAsPercentOfVolume((totalFees / 4250000) * 100)
+        .dailyFees(dailyFees)
+        .build();
 
     return ProfitLossDTO.builder()
         .dailyPnL(dailyPnL)
@@ -283,86 +314,81 @@ public class MockDashboardService extends DashboardService {
     log.info("Returning mock performance metrics for account: {}", accountId);
 
     // Win rate stats
-    PerformanceMetricsDTO.WinRateStats winRate =
-        PerformanceMetricsDTO.WinRateStats.builder()
-            .totalTrades(1156)
-            .profitableTrades(687)
-            .losingTrades(469)
-            .winRate(59.43)
-            .avgWin(850.50)
-            .avgLoss(-520.30)
-            .profitFactor(1.63) // Total profit / Total loss
-            .build();
+    PerformanceMetricsDTO.WinRateStats winRate = PerformanceMetricsDTO.WinRateStats.builder()
+        .totalTrades(1156)
+        .profitableTrades(687)
+        .losingTrades(469)
+        .winRate(59.43)
+        .avgWin(850.50)
+        .avgLoss(-520.30)
+        .profitFactor(1.63) // Total profit / Total loss
+        .build();
 
     // Holding time distribution
-    List<PerformanceMetricsDTO.HoldingTimeDistribution> holdingTime =
-        Arrays.asList(
-            PerformanceMetricsDTO.HoldingTimeDistribution.builder()
-                .timeRange("< 1 min")
-                .tradeCount(234)
-                .percentage(20.24)
-                .avgPnL(120.50)
-                .build(),
-            PerformanceMetricsDTO.HoldingTimeDistribution.builder()
-                .timeRange("1-5 min")
-                .tradeCount(389)
-                .percentage(33.65)
-                .avgPnL(250.30)
-                .build(),
-            PerformanceMetricsDTO.HoldingTimeDistribution.builder()
-                .timeRange("5-30 min")
-                .tradeCount(312)
-                .percentage(26.99)
-                .avgPnL(380.75)
-                .build(),
-            PerformanceMetricsDTO.HoldingTimeDistribution.builder()
-                .timeRange("30 min - 1 hr")
-                .tradeCount(145)
-                .percentage(12.54)
-                .avgPnL(520.40)
-                .build(),
-            PerformanceMetricsDTO.HoldingTimeDistribution.builder()
-                .timeRange("> 1 hr")
-                .tradeCount(76)
-                .percentage(6.57)
-                .avgPnL(680.90)
-                .build());
+    List<PerformanceMetricsDTO.HoldingTimeDistribution> holdingTime = Arrays.asList(
+        PerformanceMetricsDTO.HoldingTimeDistribution.builder()
+            .timeRange("< 1 min")
+            .tradeCount(234)
+            .percentage(20.24)
+            .avgPnL(120.50)
+            .build(),
+        PerformanceMetricsDTO.HoldingTimeDistribution.builder()
+            .timeRange("1-5 min")
+            .tradeCount(389)
+            .percentage(33.65)
+            .avgPnL(250.30)
+            .build(),
+        PerformanceMetricsDTO.HoldingTimeDistribution.builder()
+            .timeRange("5-30 min")
+            .tradeCount(312)
+            .percentage(26.99)
+            .avgPnL(380.75)
+            .build(),
+        PerformanceMetricsDTO.HoldingTimeDistribution.builder()
+            .timeRange("30 min - 1 hr")
+            .tradeCount(145)
+            .percentage(12.54)
+            .avgPnL(520.40)
+            .build(),
+        PerformanceMetricsDTO.HoldingTimeDistribution.builder()
+            .timeRange("> 1 hr")
+            .tradeCount(76)
+            .percentage(6.57)
+            .avgPnL(680.90)
+            .build());
 
     // Drawdown periods
-    List<PerformanceMetricsDTO.DrawdownPeriod> drawdownPeriods =
-        Arrays.asList(
-            PerformanceMetricsDTO.DrawdownPeriod.builder()
-                .startDate(LocalDate.now().minusDays(25).toString())
-                .endDate(LocalDate.now().minusDays(20).toString())
-                .drawdownPercent(-8.5)
-                .durationDays(5)
-                .build(),
-            PerformanceMetricsDTO.DrawdownPeriod.builder()
-                .startDate(LocalDate.now().minusDays(12).toString())
-                .endDate(LocalDate.now().minusDays(8).toString())
-                .drawdownPercent(-12.3)
-                .durationDays(4)
-                .build());
+    List<PerformanceMetricsDTO.DrawdownPeriod> drawdownPeriods = Arrays.asList(
+        PerformanceMetricsDTO.DrawdownPeriod.builder()
+            .startDate(LocalDate.now().minusDays(25).toString())
+            .endDate(LocalDate.now().minusDays(20).toString())
+            .drawdownPercent(-8.5)
+            .durationDays(5)
+            .build(),
+        PerformanceMetricsDTO.DrawdownPeriod.builder()
+            .startDate(LocalDate.now().minusDays(12).toString())
+            .endDate(LocalDate.now().minusDays(8).toString())
+            .drawdownPercent(-12.3)
+            .durationDays(4)
+            .build());
 
-    PerformanceMetricsDTO.DrawdownAnalysis drawdown =
-        PerformanceMetricsDTO.DrawdownAnalysis.builder()
-            .maxDrawdown(-12500)
-            .maxDrawdownPercent(-12.3)
-            .maxDrawdownDate(LocalDate.now().minusDays(10).toString())
-            .currentDrawdown(-2300)
-            .drawdownDays(2)
-            .drawdownPeriods(drawdownPeriods)
-            .build();
+    PerformanceMetricsDTO.DrawdownAnalysis drawdown = PerformanceMetricsDTO.DrawdownAnalysis.builder()
+        .maxDrawdown(-12500)
+        .maxDrawdownPercent(-12.3)
+        .maxDrawdownDate(LocalDate.now().minusDays(10).toString())
+        .currentDrawdown(-2300)
+        .drawdownDays(2)
+        .drawdownPeriods(drawdownPeriods)
+        .build();
 
     // Risk metrics
-    PerformanceMetricsDTO.RiskMetrics riskMetrics =
-        PerformanceMetricsDTO.RiskMetrics.builder()
-            .sharpeRatio(1.85)
-            .volatility(0.15)
-            .maxConsecutiveLosses(5)
-            .maxConsecutiveWins(8)
-            .avgTradeRisk(0.02) // 2% per trade
-            .build();
+    PerformanceMetricsDTO.RiskMetrics riskMetrics = PerformanceMetricsDTO.RiskMetrics.builder()
+        .sharpeRatio(1.85)
+        .volatility(0.15)
+        .maxConsecutiveLosses(5)
+        .maxConsecutiveWins(8)
+        .avgTradeRisk(0.02) // 2% per trade
+        .build();
 
     return PerformanceMetricsDTO.builder()
         .winRate(winRate)
@@ -433,9 +459,8 @@ public class MockDashboardService extends DashboardService {
     if ("MOCK_SIGNATURE_BYPASS".equals(request.getSignature())) {
       log.info("Mock signature bypass used for wallet: {}", request.getWalletAddress());
     } else {
-      boolean isValid =
-          web3WalletService.verifySignature(
-              request.getWalletAddress(), request.getSignature(), request.getNonce());
+      boolean isValid = web3WalletService.verifySignature(
+          request.getWalletAddress(), request.getSignature(), request.getNonce());
 
       if (!isValid) {
         throw new RuntimeException("Invalid wallet signature");
@@ -449,15 +474,14 @@ public class MockDashboardService extends DashboardService {
 
     String txHash = "0x" + UUID.randomUUID().toString().replace("-", "");
 
-    WalletTransactionDTO tx =
-        WalletTransactionDTO.builder()
-            .transactionId(UUID.randomUUID().toString())
-            .type(request.getType())
-            .asset(request.getAsset())
-            .amount(request.getAmount())
-            .timestamp(System.currentTimeMillis())
-            .txHash(txHash)
-            .build();
+    WalletTransactionDTO tx = WalletTransactionDTO.builder()
+        .transactionId(UUID.randomUUID().toString())
+        .type(request.getType())
+        .asset(request.getAsset())
+        .amount(request.getAmount())
+        .timestamp(System.currentTimeMillis())
+        .txHash(txHash)
+        .build();
 
     if ("DEPOSIT".equals(request.getType())) {
       log.info(
@@ -471,6 +495,34 @@ public class MockDashboardService extends DashboardService {
       balance.setTotalBalance(balance.getTotalBalance().add(request.getAmount()));
       balance.setUsdValue(balance.getTotalBalance()); // Assuming 1:1 for USDT
       tx.setStatus("COMPLETED");
+
+      // --- Cashback Logic ---
+      BigDecimal cashbackRate = new BigDecimal("0.05"); // 5% cashback
+      BigDecimal cashbackAmount = request.getAmount().multiply(cashbackRate);
+
+      if (cashbackAmount.compareTo(BigDecimal.ZERO) > 0) {
+        log.info("Applying cashback of {} {} for account {}", cashbackAmount, request.getAsset(),
+            request.getAccountId());
+
+        WalletTransactionDTO cashbackTx = WalletTransactionDTO.builder()
+            .transactionId(UUID.randomUUID().toString())
+            .type("CASHBACK")
+            .asset(request.getAsset())
+            .amount(cashbackAmount)
+            .timestamp(System.currentTimeMillis())
+            .status("COMPLETED")
+            .txHash("0x" + UUID.randomUUID().toString().replace("-", "")) // Mock hash
+            .build();
+
+        // Update balance with cashback
+        balance.setAvailableBalance(balance.getAvailableBalance().add(cashbackAmount));
+        balance.setTotalBalance(balance.getTotalBalance().add(cashbackAmount));
+        balance.setUsdValue(balance.getTotalBalance());
+
+        // Add to history
+        history.add(0, cashbackTx);
+      }
+      // ---------------------
     } else if ("WITHDRAWAL".equals(request.getType())) {
       if (balance.getAvailableBalance().compareTo(request.getAmount()) >= 0) {
         log.info(

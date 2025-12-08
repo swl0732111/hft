@@ -22,9 +22,11 @@
 
     <modules>
         <module>hft-common</module>
+        <module>hft-account</module>
         <module>hft-trading</module>
         <module>hft-wallet</module>
         <module>hft-dashboard</module>
+        <module>hft-bot</module>
     </modules>
 
     <properties>
@@ -55,6 +57,11 @@
             <dependency>
                 <groupId>com.hft</groupId>
                 <artifactId>hft-trading</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.hft</groupId>
+                <artifactId>hft-account</artifactId>
                 <version>${project.version}</version>
             </dependency>
 

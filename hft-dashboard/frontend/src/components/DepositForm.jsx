@@ -66,6 +66,14 @@ function DepositForm({ accountId, walletAddress, onSuccess }) {
         <div className="bg-gray-800 rounded-lg p-6 shadow-lg border border-gray-700">
             <h3 className="text-lg font-semibold text-white mb-4">Deposit Funds</h3>
 
+            <div className="bg-gradient-to-r from-purple-900/50 to-pink-900/50 border border-purple-500/30 rounded-lg p-3 mb-4 flex items-center shadow-sm">
+                <span className="text-2xl mr-3">🎉</span>
+                <div>
+                    <p className="text-purple-100 font-medium text-sm">Special Offer</p>
+                    <p className="text-purple-300 text-xs">Get <span className="font-bold text-white">5% Cashback</span> instantly on all deposits!</p>
+                </div>
+            </div>
+
             {error && (
                 <div className="bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-2 rounded mb-4 text-sm">
                     {error}
@@ -110,8 +118,8 @@ function DepositForm({ accountId, walletAddress, onSuccess }) {
                         type="submit"
                         disabled={loading}
                         className={`w-full py-2 px-4 rounded font-medium transition-colors ${loading
-                                ? 'bg-purple-600/50 cursor-not-allowed text-white/50'
-                                : 'bg-purple-600 hover:bg-purple-700 text-white'
+                            ? 'bg-purple-600/50 cursor-not-allowed text-white/50'
+                            : 'bg-purple-600 hover:bg-purple-700 text-white'
                             }`}
                     >
                         {loading ? 'Signing & Processing...' : 'Sign & Deposit'}

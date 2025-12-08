@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.util.List;
 
 /** REST API controller for user dashboard. */
 @Slf4j
@@ -60,14 +61,14 @@ public class DashboardController {
    * Get trade distribution analytics.
    *
    * @param accountId User account ID
-   * @return Trade distribution with hourly patterns, pair distribution, and buy/sell ratio
+   * @return Trade distribution with hourly patterns, pair distribution, and
+   *         buy/sell ratio
    */
   @GetMapping("/trade-distribution")
   public ResponseEntity<TradeDistributionDTO> getTradeDistribution(@RequestParam String accountId) {
     log.info("Getting trade distribution for account: {}", accountId);
-    TradeDistributionDTO distribution =
-        ((com.hft.dashboard.service.MockDashboardService) dashboardService)
-            .getTradeDistribution(accountId);
+    TradeDistributionDTO distribution = ((com.hft.dashboard.service.MockDashboardService) dashboardService)
+        .getTradeDistribution(accountId);
     return ResponseEntity.ok(distribution);
   }
 
@@ -80,9 +81,8 @@ public class DashboardController {
   @GetMapping("/profit-loss")
   public ResponseEntity<ProfitLossDTO> getProfitLoss(@RequestParam String accountId) {
     log.info("Getting profit/loss data for account: {}", accountId);
-    ProfitLossDTO profitLoss =
-        ((com.hft.dashboard.service.MockDashboardService) dashboardService)
-            .getProfitLoss(accountId);
+    ProfitLossDTO profitLoss = ((com.hft.dashboard.service.MockDashboardService) dashboardService)
+        .getProfitLoss(accountId);
     return ResponseEntity.ok(profitLoss);
   }
 
@@ -90,16 +90,19 @@ public class DashboardController {
    * Get performance metrics.
    *
    * @param accountId User account ID
-   * @return Performance metrics including win rate, holding time, drawdown, and risk metrics
+   * @return Performance metrics including win rate, holding time, drawdown, and
+   *         risk metrics
    */
-  @GetMapping("/performance-metrics")
-  public ResponseEntity<PerformanceMetricsDTO> getPerformanceMetrics(
-      @RequestParam String accountId) {
-    log.info("Getting performance metrics for account: {}", accountId);
-    PerformanceMetricsDTO metrics =
-        ((com.hft.dashboard.service.MockDashboardService) dashboardService)
-            .getPerformanceMetrics(accountId);
-    return ResponseEntity.ok(metrics);
+  @GetMapping("/{accountId}/performance")
+  public ResponseEntity<PerformanceMetricsDTO> getPerformanceMetrics(@PathVariable String accountId) {
+    log.info("Getting performance metrics for account: {}", accountId); // Kept log statement
+    return ResponseEntity.ok(dashboardService.getPerformanceMetrics(accountId));
+  }
+
+  @GetMapping("/{accountId}/trades")
+  public ResponseEntity<List<TradeHistoryDTO>> getTradeHistory(@PathVariable String accountId) {
+    log.info("Getting trade history for account: {}", accountId); // Added log statement
+    return ResponseEntity.ok(dashboardService.getTradeHistory(accountId));
   }
 
   /** Health check endpoint. */
@@ -113,9 +116,8 @@ public class DashboardController {
   @GetMapping("/wallet/balance")
   public ResponseEntity<WalletBalanceDTO> getWalletBalance(@RequestParam String accountId) {
     log.info("Getting wallet balance for account: {}", accountId);
-    WalletBalanceDTO balance =
-        ((com.hft.dashboard.service.MockDashboardService) dashboardService)
-            .getWalletBalance(accountId);
+    WalletBalanceDTO balance = ((com.hft.dashboard.service.MockDashboardService) dashboardService)
+        .getWalletBalance(accountId);
     return ResponseEntity.ok(balance);
   }
 
@@ -123,9 +125,8 @@ public class DashboardController {
   public ResponseEntity<java.util.List<WalletTransactionDTO>> getWalletTransactions(
       @RequestParam String accountId) {
     log.info("Getting wallet transactions for account: {}", accountId);
-    java.util.List<WalletTransactionDTO> transactions =
-        ((com.hft.dashboard.service.MockDashboardService) dashboardService)
-            .getWalletTransactions(accountId);
+    java.util.List<WalletTransactionDTO> transactions = ((com.hft.dashboard.service.MockDashboardService) dashboardService)
+        .getWalletTransactions(accountId);
     return ResponseEntity.ok(transactions);
   }
 
@@ -133,9 +134,8 @@ public class DashboardController {
   public ResponseEntity<WalletTransactionDTO> deposit(@RequestBody TransactionRequestDTO request) {
     log.info("Processing deposit for account: {}", request.getAccountId());
     request.setType("DEPOSIT");
-    WalletTransactionDTO transaction =
-        ((com.hft.dashboard.service.MockDashboardService) dashboardService)
-            .processWalletTransaction(request);
+    WalletTransactionDTO transaction = ((com.hft.dashboard.service.MockDashboardService) dashboardService)
+        .processWalletTransaction(request);
     return ResponseEntity.ok(transaction);
   }
 
@@ -143,9 +143,8 @@ public class DashboardController {
   public ResponseEntity<WalletTransactionDTO> withdraw(@RequestBody TransactionRequestDTO request) {
     log.info("Processing withdrawal for account: {}", request.getAccountId());
     request.setType("WITHDRAWAL");
-    WalletTransactionDTO transaction =
-        ((com.hft.dashboard.service.MockDashboardService) dashboardService)
-            .processWalletTransaction(request);
+    WalletTransactionDTO transaction = ((com.hft.dashboard.service.MockDashboardService) dashboardService)
+        .processWalletTransaction(request);
     return ResponseEntity.ok(transaction);
   }
 }

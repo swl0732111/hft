@@ -1,11 +1,13 @@
 package com.hft.trading.service;
 
+import com.hft.common.domain.AccountType;
 import com.hft.trading.domain.Order;
 import com.hft.trading.domain.Trade;
 import com.hft.trading.engine.MatchingEngine;
 import com.hft.trading.engine.OrderBook;
 import com.hft.trading.event.OrderEvent;
 import com.hft.trading.repository.OrderRepository;
+import com.hft.account.service.AccountService;
 import com.lmax.disruptor.RingBuffer;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
@@ -23,6 +25,7 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final AccountService accountService;
     private final RingBuffer<OrderEvent> orderRingBuffer;
+    private final RiskControlService riskControlService;
 
     /**
      * Submit order via Disruptor RingBuffer (zero allocation, minimal latency).
@@ -40,6 +43,7 @@ public class OrderService {
     public void submitOrderAsync(Order order) {
         validateSignature(order);
         prepareOrder(order);
+        riskControlService.validateOrder(order);
 
         // Lock balance for buy orders (synchronous for risk management)
         // This is the only blocking operation in the hot path
@@ -70,6 +74,7 @@ public class OrderService {
     public List<Trade> submitOrder(Order order) {
         validateSignature(order);
         prepareOrder(order);
+        riskControlService.validateOrder(order);
 
         // Lock balance for buy orders
         if (order.getSide() == Order.Side.BUY && order.getAccountId() != null) {

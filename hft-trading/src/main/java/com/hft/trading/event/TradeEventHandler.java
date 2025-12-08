@@ -13,6 +13,8 @@ import com.hft.trading.repository.TradingVolumeStatsRepository;
 import com.hft.trading.service.FeeService;
 import com.hft.trading.service.TransactionLogService;
 import com.lmax.disruptor.EventHandler;
+
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,12 +40,12 @@ public class TradeEventHandler implements EventHandler<TradeEvent> {
 
     @Override
     public void onEvent(TradeEvent event, long sequence, boolean endOfBatch) {
-    // Persist to Chronicle Queue first (~200ns)
-    try {
-      chronicleTradeQueue.append(event);
-    } catch (Exception e) {
-      log.error("Failed to append trade to Chronicle Queue: {}", event.getSymbol(), e);
-    }
+        // Persist to Chronicle Queue first (~200ns)
+        try {
+            chronicleTradeQueue.append(event);
+        } catch (Exception e) {
+            log.error("Failed to append trade to Chronicle Queue: {}", event.getSymbol(), e);
+        }
 
         // Update market price tracker
         priceTracker.updatePrice(event.getSymbol(), event.getPriceScaled());
@@ -58,9 +60,8 @@ public class TradeEventHandler implements EventHandler<TradeEvent> {
 
         // Deduct fees for maker and taker
         deductFees(event);
-
-    // Track trading volume for tier calculation
-    trackVolume(event);
+        // Track trading volume for tier calculation
+        trackVolume(event);
 
         // Publish to FIX market data feed
         publishToFix(event);
@@ -91,29 +92,19 @@ public class TradeEventHandler implements EventHandler<TradeEvent> {
             // Extract quote asset from symbol (e.g., BTC-USDC -> USDC)
             String[] symbolParts = event.getSymbol().split("-");
             String quoteAsset = symbolParts.length > 1 ? symbolParts[1] : "USDC";
-
-      // Deduct maker fee (tier-aware, zero-allocation calculation)
-      if (makerOrder.getAccountId() != null) {
-        long makerFeeScaled =
-            feeService.calculateFeeScaled(
-                makerOrder.getAccountId(), event.getSymbol(), tradeValueScaled, true);
-        java.math.BigDecimal makerFee =
-            java.math.BigDecimal.valueOf(FixedPointMath.toDouble(makerFeeScaled));
-                feeService.deductMakerFee(makerOrder.getAccountId(), event.getSymbol(),
-                        makerFee, quoteAsset);
+            // Deduct maker fee (tier-aware, zero-allocation calculation)
+            if (makerOrder.getAccountId() != null) {
+                long makerFeeScaled = feeService.calculateFeeScaled(makerOrder.getAccountId(), event.getSymbol(), tradeValueScaled, true);
+                BigDecimal makerFee = BigDecimal.valueOf(FixedPointMath.toDouble(makerFeeScaled));
+                feeService.deductMakerFee(makerOrder.getAccountId(), event.getSymbol(), makerFee, quoteAsset);
             }
 
-      // Deduct taker fee (tier-aware)
-      if (takerOrder.getAccountId() != null) {
-        long takerFeeScaled =
-            feeService.calculateFeeScaled(
-                takerOrder.getAccountId(), event.getSymbol(), tradeValueScaled, false);
-        java.math.BigDecimal takerFee =
-            java.math.BigDecimal.valueOf(FixedPointMath.toDouble(takerFeeScaled));
-                feeService.deductTakerFee(takerOrder.getAccountId(), event.getSymbol(),
-                        takerFee, quoteAsset);
+            // Deduct taker fee (tier-aware)
+            if (takerOrder.getAccountId() != null) {
+                long takerFeeScaled = feeService.calculateFeeScaled(takerOrder.getAccountId(), event.getSymbol(), tradeValueScaled, false);
+                BigDecimal takerFee = BigDecimal.valueOf(FixedPointMath.toDouble(takerFeeScaled));
+                feeService.deductTakerFee(takerOrder.getAccountId(), event.getSymbol(), takerFee, quoteAsset);
             }
-
         } catch (Exception e) {
             log.error("Failed to deduct fees for trade: {}", event.getSymbol(), e);
         }
@@ -173,29 +164,29 @@ public class TradeEventHandler implements EventHandler<TradeEvent> {
 
     private void publishToFix(TradeEvent event) {
         try {
-      // Publish trade to FIX market data feed
-      if (marketDataPublisher != null) {
-        marketDataPublisher.publishTrade(
-            event.getSymbol(),
-            event.getPriceScaled(),
-            event.getQuantityScaled(),
-            event.getTimestamp(),
-            event.getMakerOrderId(),
-            event.getTakerOrderId());
+            // Publish trade to FIX market data feed
+            if (marketDataPublisher != null) {
+                marketDataPublisher.publishTrade(
+                        event.getSymbol(),
+                        event.getPriceScaled(),
+                        event.getQuantityScaled(),
+                        event.getTimestamp(),
+                        event.getMakerOrderId(),
+                        event.getTakerOrderId());
 
-        log.debug(
-            "Trade published to FIX: {} @ {} qty {}",
-            event.getSymbol(),
-            event.getPriceScaled(),
-            event.getQuantityScaled());
-      } else {
-        // FIX publisher not configured, skip
-        log.trace("FIX publisher not available, skipping trade publication");
-      }
+                log.debug(
+                        "Trade published to FIX: {} @ {} qty {}",
+                        event.getSymbol(),
+                        event.getPriceScaled(),
+                        event.getQuantityScaled());
+            } else {
+                // FIX publisher not configured, skip
+                log.trace("FIX publisher not available, skipping trade publication");
+            }
         } catch (Exception e) {
-      log.error("Failed to publish trade to FIX: {}", event.getSymbol(), e);
-      // Don't fail the entire trade processing if FIX publish fails
-    }
+            log.error("Failed to publish trade to FIX: {}", event.getSymbol(), e);
+            // Don't fail the entire trade processing if FIX publish fails
+        }
     }
 
     private void logTrade(TradeEvent event) {

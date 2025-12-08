@@ -18,7 +18,8 @@ import org.springframework.data.relational.core.mapping.Table;
 @AllArgsConstructor
 @Table("trading_volume_stats")
 public class TradingVolumeStats {
-  @Id private String id;
+  @Id
+  private String id;
 
   private String accountId;
   private LocalDate date;

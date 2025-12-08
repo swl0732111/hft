@@ -6,8 +6,12 @@ import com.hft.common.domain.UserTier;
 import com.hft.common.util.FixedPointMath;
 import com.hft.dashboard.dto.*;
 import com.hft.trading.domain.TradingVolumeStats;
-import com.hft.trading.repository.AccountRepository;
+import com.hft.account.repository.AccountRepository;
 import com.hft.trading.repository.TradingVolumeStatsRepository;
+import com.hft.trading.repository.OrderRepository;
+import com.hft.trading.repository.TransactionLogRepository;
+import com.hft.trading.domain.Order;
+import com.hft.trading.domain.TransactionLog;
 import com.hft.trading.service.TierService;
 import java.time.LocalDate;
 import java.util.*;
@@ -24,6 +28,8 @@ public class DashboardService {
 
   private final AccountRepository accountRepository;
   private final TradingVolumeStatsRepository volumeStatsRepository;
+  private final OrderRepository orderRepository;
+  private final TransactionLogRepository transactionLogRepository;
   private final TierService tierService;
 
   /** Get dashboard overview with trading statistics. */
@@ -45,10 +51,9 @@ public class DashboardService {
 
   /** Get tier information and progress. */
   public TierInfoDTO getTierInfo(String accountId) {
-    Account account =
-        accountRepository
-            .findById(accountId)
-            .orElseThrow(() -> new IllegalArgumentException("Account not found"));
+    Account account = accountRepository
+        .findById(accountId)
+        .orElseThrow(() -> new IllegalArgumentException("Account not found"));
 
     UserTier currentTier = account.getCurrentTierOrDefault();
     UserTier nextTier = currentTier.getNextTier();
@@ -100,12 +105,11 @@ public class DashboardService {
     LocalDate today = LocalDate.now();
     LocalDate startDate = today.minusDays(30);
 
-    List<TradingVolumeStats> stats =
-        volumeStatsRepository.findByAccountIdAndDateBetween(accountId, startDate, today);
+    List<TradingVolumeStats> stats = volumeStatsRepository.findByAccountIdAndDateBetween(accountId, startDate, today);
 
     // Create map for quick lookup
-    Map<LocalDate, TradingVolumeStats> statsMap =
-        stats.stream().collect(Collectors.toMap(TradingVolumeStats::getDate, s -> s));
+    Map<LocalDate, TradingVolumeStats> statsMap = stats.stream()
+        .collect(Collectors.toMap(TradingVolumeStats::getDate, s -> s));
 
     // Build daily volume data (fill missing days with 0)
     List<VolumeChartDTO.DailyVolumeDTO> dailyData = new ArrayList<>();
@@ -129,16 +133,14 @@ public class DashboardService {
     }
 
     // Build tier thresholds
-    List<VolumeChartDTO.TierThresholdDTO> thresholds =
-        Arrays.stream(UserTier.values())
-            .filter(tier -> tier != UserTier.VIP0) // Skip VIP0 (starts at 0)
-            .map(
-                tier ->
-                    VolumeChartDTO.TierThresholdDTO.builder()
-                        .tier(tier.name())
-                        .volume(tier.getMinVolume())
-                        .build())
-            .collect(Collectors.toList());
+    List<VolumeChartDTO.TierThresholdDTO> thresholds = Arrays.stream(UserTier.values())
+        .filter(tier -> tier != UserTier.VIP0) // Skip VIP0 (starts at 0)
+        .map(
+            tier -> VolumeChartDTO.TierThresholdDTO.builder()
+                .tier(tier.name())
+                .volume(tier.getMinVolume())
+                .build())
+        .collect(Collectors.toList());
 
     return VolumeChartDTO.builder().data(dailyData).tierThresholds(thresholds).build();
   }
@@ -147,8 +149,7 @@ public class DashboardService {
   private DashboardOverviewDTO.TradingStatsDTO getStatsForPeriod(
       String accountId, LocalDate startDate, LocalDate endDate) {
 
-    List<TradingVolumeStats> stats =
-        volumeStatsRepository.findByAccountIdAndDateBetween(accountId, startDate, endDate);
+    List<TradingVolumeStats> stats = volumeStatsRepository.findByAccountIdAndDateBetween(accountId, startDate, endDate);
 
     long totalVolumeScaled = stats.stream().mapToLong(TradingVolumeStats::getVolumeScaled).sum();
 
@@ -176,9 +177,8 @@ public class DashboardService {
 
   /** Calculate fee savings compared to VIP0. */
   private double calculateFeeSavings(String accountId, UserTier currentTier) {
-    long volume30dScaled =
-        volumeStatsRepository.sumVolumeByAccountIdAndDateBetween(
-            accountId, LocalDate.now().minusDays(30), LocalDate.now());
+    long volume30dScaled = volumeStatsRepository.sumVolumeByAccountIdAndDateBetween(
+        accountId, LocalDate.now().minusDays(30), LocalDate.now());
 
     double volume30d = FixedPointMath.toDouble(volume30dScaled);
     return calculateFeeSavingsForVolume(volume30d, currentTier);
@@ -215,5 +215,45 @@ public class DashboardService {
       case 4 -> "Normal";
       default -> "Standard";
     };
+  }
+
+  /** Get trade history for an account. */
+  public List<TradeHistoryDTO> getTradeHistory(String accountId) {
+    // 1. Fetch orders for the account
+    List<Order> orders = orderRepository.findByAccountId(accountId);
+    List<String> orderIds = orders.stream().map(Order::getId).collect(Collectors.toList());
+
+    // 2. Fetch transaction logs for these orders
+    List<TransactionLog> logs = transactionLogRepository.findByOrderIdIn(orderIds);
+
+    // 3. Map to DTO
+    Map<String, Order> orderMap = orders.stream().collect(Collectors.toMap(Order::getId, o -> o));
+
+    return logs.stream()
+        .map(log -> {
+          Order order = orderMap.get(log.getOrderId());
+          return TradeHistoryDTO.builder()
+              .transactionId(log.getId())
+              .orderId(log.getOrderId())
+              .symbol(log.getSymbol())
+              .type(order != null ? order.getSide().name() : "UNKNOWN")
+              .amount(order != null ? order.getQuantityAsDouble() : 0)
+              .price(order != null ? order.getPriceAsDouble() : 0)
+              .status(log.getEventType().name())
+              .timestamp(log.getTimestamp())
+              .txHash(log.getDetails()) // Assuming details contain txHash for now
+              .asset(order != null ? order.getSymbol().split("/")[0] : "")
+              .build();
+        })
+        .sorted(Comparator.comparingLong(TradeHistoryDTO::getTimestamp).reversed())
+        .collect(Collectors.toList());
+  }
+
+  /** Get performance metrics. */
+  public PerformanceMetricsDTO getPerformanceMetrics(String accountId) {
+    // Base implementation returns null or throws, as it's currently mocked in
+    // subclass
+    // For now, we can return an empty object or null to satisfy the compiler
+    return PerformanceMetricsDTO.builder().build();
   }
 }

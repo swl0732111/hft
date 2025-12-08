@@ -1,8 +1,11 @@
 package com.hft.trading.persistence;
 
 import com.hft.trading.domain.Order;
+import com.hft.trading.domain.Trade;
 import com.hft.trading.recovery.QueueCheckpointManager;
 import com.hft.trading.repository.OrderRepository;
+import com.hft.trading.repository.TradeRepository;
+import com.hft.trading.repository.TransactionLogRepository;
 import jakarta.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.List;
@@ -13,8 +16,10 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 /**
- * Background service to persist Chronicle Queue data to database. Tails the order queue
- * asynchronously and batch-writes to DB. This keeps the hot path (queue writes) completely separate
+ * Background service to persist Chronicle Queue data to database. Tails the
+ * order queue
+ * asynchronously and batch-writes to DB. This keeps the hot path (queue writes)
+ * completely separate
  * from DB writes.
  */
 @Slf4j
@@ -62,16 +67,15 @@ public class ChronicleToDbWriter {
         // Read from queue
         boolean hasData;
         synchronized (tailerLock) {
-          hasData =
-              tailer.readDocument(
-                  wire -> {
-                    try {
-                      Order order = deserializeOrder(wire);
-                      batch.add(order);
-                    } catch (Exception e) {
-                      log.error("Failed to deserialize order", e);
-                    }
-                  });
+          hasData = tailer.readDocument(
+              wire -> {
+                try {
+                  Order order = deserializeOrder(wire);
+                  batch.add(order);
+                } catch (Exception e) {
+                  log.error("Failed to deserialize order", e);
+                }
+              });
         }
 
         // Batch write to DB
