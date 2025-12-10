@@ -1,6 +1,7 @@
 package com.hft.trading.fix;
 
 import com.hft.trading.domain.Trade;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import quickfix.field.*;
 import quickfix.fix44.MarketDataIncrementalRefresh;

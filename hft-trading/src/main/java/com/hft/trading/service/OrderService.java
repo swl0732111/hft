@@ -8,6 +8,7 @@ import com.hft.trading.engine.OrderBook;
 import com.hft.trading.event.OrderEvent;
 import com.hft.trading.repository.OrderRepository;
 import com.hft.account.service.AccountService;
+import com.hft.trading.state.AccountStateStore;
 import com.lmax.disruptor.RingBuffer;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
@@ -24,6 +25,7 @@ public class OrderService {
     private final MatchingEngine matchingEngine;
     private final OrderRepository orderRepository;
     private final AccountService accountService;
+    private final AccountStateStore accountStateStore;
     private final RingBuffer<OrderEvent> orderRingBuffer;
     private final RiskControlService riskControlService;
 
@@ -51,7 +53,8 @@ public class OrderService {
             BigDecimal requiredAmount = order.getPrice().multiply(order.getQuantity());
             String[] symbolParts = order.getSymbol().split("-");
             String quoteAsset = symbolParts.length > 1 ? symbolParts[1] : "USDC";
-            accountService.lockBalance(order.getAccountId(), quoteAsset, requiredAmount);
+            var balance = accountService.lockBalance(order.getAccountId(), quoteAsset, requiredAmount);
+            accountStateStore.updateBalance(balance);
         }
 
         // Publish to RingBuffer (zero allocation, <100ns)
@@ -81,7 +84,8 @@ public class OrderService {
             BigDecimal requiredAmount = order.getPrice().multiply(order.getQuantity());
             String[] symbolParts = order.getSymbol().split("-");
             String quoteAsset = symbolParts.length > 1 ? symbolParts[1] : "USDC";
-            accountService.lockBalance(order.getAccountId(), quoteAsset, requiredAmount);
+            var balance = accountService.lockBalance(order.getAccountId(), quoteAsset, requiredAmount);
+            accountStateStore.updateBalance(balance);
         }
 
         orderRepository.save(order);

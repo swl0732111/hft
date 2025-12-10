@@ -16,6 +16,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import com.hft.trading.repository.OrderRepository;
 import com.hft.account.service.AccountService;
 import com.hft.trading.service.RiskControlService;
+import com.hft.trading.state.AccountStateStore;
+import com.hft.common.domain.AccountBalance;
 
 class OrderValidationTest {
 
@@ -23,6 +25,7 @@ class OrderValidationTest {
     private MatchingEngine matchingEngine;
     private OrderRepository orderRepository;
     private AccountService accountService;
+    private AccountStateStore accountStateStore;
     private RingBuffer ringBuffer;
     private RiskControlService riskControlService;
 
@@ -31,10 +34,15 @@ class OrderValidationTest {
         matchingEngine = Mockito.mock(MatchingEngine.class);
         orderRepository = Mockito.mock(OrderRepository.class);
         accountService = Mockito.mock(AccountService.class);
+        accountStateStore = Mockito.mock(AccountStateStore.class);
         ringBuffer = Mockito.mock(RingBuffer.class);
         riskControlService = Mockito.mock(RiskControlService.class);
-        orderService = new OrderService(matchingEngine, orderRepository, accountService, ringBuffer,
+        orderService = new OrderService(matchingEngine, orderRepository, accountService, accountStateStore, ringBuffer,
                 riskControlService);
+
+        // Mock lockBalance to return a dummy balance
+        Mockito.when(accountService.lockBalance(Mockito.anyString(), Mockito.anyString(), Mockito.any()))
+                .thenReturn(AccountBalance.builder().build());
     }
 
     @Test

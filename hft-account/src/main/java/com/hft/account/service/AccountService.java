@@ -12,6 +12,8 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
+import static com.hft.common.domain.AccountType.SPOT;
+
 @Service
 @RequiredArgsConstructor
 public class AccountService {
@@ -37,7 +39,7 @@ public class AccountService {
     }
 
     public AccountBalance getBalance(String accountId, String asset) {
-        return getBalance(accountId, asset, com.hft.common.domain.AccountType.SPOT);
+        return getBalance(accountId, asset, SPOT);
     }
 
     public AccountBalance getBalance(String accountId, String asset, com.hft.common.domain.AccountType type) {
@@ -45,7 +47,7 @@ public class AccountService {
                 .orElseGet(() -> {
                     // Auto-provision test accounts with large balance (only for SPOT)
                     BigDecimal initialBalance = BigDecimal.ZERO;
-                    if (type == com.hft.common.domain.AccountType.SPOT && accountId.startsWith("test-")) {
+                    if (type == SPOT && accountId.startsWith("test-")) {
                         initialBalance = new BigDecimal("1000000000");
 
                         // Ensure account exists to satisfy FK constraint
@@ -77,14 +79,19 @@ public class AccountService {
         return accountBalanceRepository.findByAccountId(accountId);
     }
 
-    @Transactional
-    public void lockBalance(String accountId, String asset, BigDecimal amount) {
-        // Default to SPOT for backward compatibility or specific logic
-        lockBalance(accountId, asset, com.hft.common.domain.AccountType.SPOT, amount);
+    public Iterable<AccountBalance> getAllBalances() {
+        return accountBalanceRepository.findAll();
     }
 
     @Transactional
-    public void lockBalance(String accountId, String asset, com.hft.common.domain.AccountType type, BigDecimal amount) {
+    public AccountBalance lockBalance(String accountId, String asset, BigDecimal amount) {
+        // Default to SPOT for backward compatibility or specific logic
+        return lockBalance(accountId, asset, SPOT, amount);
+    }
+
+    @Transactional
+    public AccountBalance lockBalance(String accountId, String asset, com.hft.common.domain.AccountType type,
+            BigDecimal amount) {
         AccountBalance balance = getBalance(accountId, asset, type);
 
         if (balance.getAvailableBalance().compareTo(amount) < 0) {
@@ -93,59 +100,59 @@ public class AccountService {
 
         balance.setAvailableBalance(balance.getAvailableBalance().subtract(amount));
         balance.setLockedBalance(balance.getLockedBalance().add(amount));
-        accountBalanceRepository.save(balance);
+        return accountBalanceRepository.save(balance);
     }
 
     @Transactional
-    public void unlockBalance(String accountId, String asset, BigDecimal amount) {
-        unlockBalance(accountId, asset, com.hft.common.domain.AccountType.SPOT, amount);
+    public AccountBalance unlockBalance(String accountId, String asset, BigDecimal amount) {
+        return unlockBalance(accountId, asset, SPOT, amount);
     }
 
     @Transactional
-    public void unlockBalance(String accountId, String asset, com.hft.common.domain.AccountType type,
+    public AccountBalance unlockBalance(String accountId, String asset, com.hft.common.domain.AccountType type,
             BigDecimal amount) {
         AccountBalance balance = getBalance(accountId, asset, type);
         balance.setLockedBalance(balance.getLockedBalance().subtract(amount));
         balance.setAvailableBalance(balance.getAvailableBalance().add(amount));
-        accountBalanceRepository.save(balance);
+        return accountBalanceRepository.save(balance);
     }
 
     @Transactional
-    public void deductLockedBalance(String accountId, String asset, BigDecimal amount) {
-        deductLockedBalance(accountId, asset, com.hft.common.domain.AccountType.SPOT, amount);
+    public AccountBalance deductLockedBalance(String accountId, String asset, BigDecimal amount) {
+        return deductLockedBalance(accountId, asset, SPOT, amount);
     }
 
     @Transactional
-    public void deductLockedBalance(String accountId, String asset, com.hft.common.domain.AccountType type,
+    public AccountBalance deductLockedBalance(String accountId, String asset, com.hft.common.domain.AccountType type,
             BigDecimal amount) {
         AccountBalance balance = getBalance(accountId, asset, type);
         balance.setLockedBalance(balance.getLockedBalance().subtract(amount));
-        accountBalanceRepository.save(balance);
+        return accountBalanceRepository.save(balance);
     }
 
     @Transactional
-    public void creditBalance(String accountId, String asset, BigDecimal amount) {
+    public AccountBalance creditBalance(String accountId, String asset, BigDecimal amount) {
         // Default deposits go to SPOT
-        creditBalance(accountId, asset, com.hft.common.domain.AccountType.SPOT, amount);
+        return creditBalance(accountId, asset, SPOT, amount);
     }
 
     @Transactional
-    public void creditBalance(String accountId, String asset, com.hft.common.domain.AccountType type,
+    public AccountBalance creditBalance(String accountId, String asset, com.hft.common.domain.AccountType type,
             BigDecimal amount) {
         AccountBalance balance = getBalance(accountId, asset, type);
         balance.setAvailableBalance(balance.getAvailableBalance().add(amount));
-        accountBalanceRepository.save(balance);
+        return accountBalanceRepository.save(balance);
     }
 
     @Transactional
-    public void debitAvailableBalance(String accountId, String asset, com.hft.common.domain.AccountType type,
+    public AccountBalance debitAvailableBalance(String accountId, String asset, com.hft.common.domain.AccountType type,
             BigDecimal amount) {
         AccountBalance balance = getBalance(accountId, asset, type);
         if (balance.getAvailableBalance().compareTo(amount) < 0) {
             throw new IllegalArgumentException("Insufficient balance in " + type);
         }
         balance.setAvailableBalance(balance.getAvailableBalance().subtract(amount));
-        accountBalanceRepository.save(balance);
+        return accountBalanceRepository.save(balance);
     }
 
     public BigDecimal getTotalBalance(String asset) {

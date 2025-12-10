@@ -56,4 +56,8 @@ export const dashboardAPI = {
     // Trading API
     submitOrder: (orderData) =>
         axios.post(`${API_BASE_URL.replace('/dashboard', '')}/orders`, orderData),
+
+    // Market Data API
+    getQuote: (symbol) =>
+        axios.get(`/api/v1/market/quote/${symbol}`),
 };

@@ -61,6 +61,11 @@
             <groupId>org.agrona</groupId>
             <artifactId>agrona</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.rocksdb</groupId>
+            <artifactId>rocksdbjni</artifactId>
+            <version>9.7.3</version>
+        </dependency>
 
         <!-- Chronicle Queue for WAL -->
         <dependency>

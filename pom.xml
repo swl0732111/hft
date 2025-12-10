@@ -27,6 +27,7 @@
         <module>hft-wallet</module>
         <module>hft-dashboard</module>
         <module>hft-bot</module>
+        <module>hft-aggregator</module>
     </modules>
 
     <properties>

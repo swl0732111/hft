@@ -1,0 +1,145 @@
+.account-dashboard {
+    padding: 20px;
+    display: grid;
+    gap: 20px;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+}
+
+/* Risk Metrics Card */
+.risk-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 12px;
+    padding: 24px;
+    color: white;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.risk-card h3 {
+    margin: 0 0 20px 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.risk-metrics {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+}
+
+.metric {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.metric .label {
+    font-size: 12px;
+    opacity: 0.8;
+}
+
+.metric .value {
+    font-size: 24px;
+    font-weight: 700;
+}
+
+.value.danger {
+    color: #ff4444;
+    animation: pulse 2s infinite;
+}
+
+.value.warning {
+    color: #ffaa00;
+}
+
+.value.safe {
+    color: #00ff88;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.6;
+    }
+}
+
+/* Balances Card */
+.balances-card,
+.positions-card {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.balances-card h3,
+.positions-card h3 {
+    margin: 0 0 16px 0;
+    font-size: 18px;
+    color: #2c3e50;
+}
+
+/* Tables */
+.balances-table,
+.positions-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.balances-table th,
+.positions-table th {
+    text-align: left;
+    padding: 12px 8px;
+    border-bottom: 2px solid #e0e0e0;
+    color: #666;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.balances-table td,
+.positions-table td {
+    padding: 12px 8px;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 14px;
+}
+
+.balances-table tr:last-child td,
+.positions-table tr:last-child td {
+    border-bottom: none;
+}
+
+.profit {
+    color: #10b981;
+    font-weight: 600;
+}
+
+.loss {
+    color: #ef4444;
+    font-weight: 600;
+}
+
+/* Loading state */
+.loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 400px;
+    font-size: 18px;
+    color: #666;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .account-dashboard {
+        grid-template-columns: 1fr;
+    }
+
+    .risk-metrics {
+        grid-template-columns: 1fr;
+    }
+}

@@ -1,0 +1,53 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: hft-aggregator
+
+# Aggregator Configuration
+aggregator:
+  # Order book settings
+  orderbook:
+    max-depth: 20              # Max price levels to maintain
+    snapshot-interval-ms: 1000 # Snapshot persistence interval
+    
+  # Smart Order Routing
+  sor:
+    enabled: true
+    latency-weight: 0.3        # Weight for latency in scoring (0-1)
+    price-weight: 0.5          # Weight for price in scoring
+    liquidity-weight: 0.2      # Weight for available liquidity
+    
+  # Edge case protection
+  protection:
+    flash-crash-threshold: 0.05      # 5% price move threshold
+    flash-crash-window-ms: 1000      # Time window for detection
+    quote-deviation-threshold: 0.02  # 2% max deviation from median
+    connection-timeout-ms: 5000      # Connection timeout
+    order-response-timeout-ms: 3000  # Order response timeout
+    
+  # Performance tuning
+  performance:
+    event-buffer-size: 65536     # Disruptor ring buffer size (power of 2)
+    object-pool-size: 10000      # Object pool initial size
+    
+  # Supported exchanges/LPs
+  sources:
+    - id: binance
+      type: EXCHANGE
+      websocket-url: wss://stream.binance.com:9443/ws
+      rest-url: https://api.binance.com
+      enabled: true
+      priority: 1
+    - id: okx
+      type: EXCHANGE
+      websocket-url: wss://ws.okx.com:8443/ws/v5/public
+      rest-url: https://www.okx.com
+      enabled: true
+      priority: 2
+
+logging:
+  level:
+    com.hft.aggregator: DEBUG
+    org.springframework: WARN

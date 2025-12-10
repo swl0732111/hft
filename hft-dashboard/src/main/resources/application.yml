@@ -1,6 +1,14 @@
 server:
   port: 8081
 
+# Disable RocksDB in Dashboard (only Trading service should use it)
+rocksdb:
+  enabled: false
+
+# Disable FIX protocol in Dashboard (only Trading service needs it)
+fix:
+  enabled: false
+
 spring:
   application:
     name: hft-dashboard

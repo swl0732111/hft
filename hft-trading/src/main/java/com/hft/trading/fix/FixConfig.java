@@ -1,13 +1,16 @@
 package com.hft.trading.fix;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import quickfix.*;
 
 @Configuration
+@ConditionalOnProperty(name = "fix.enabled", havingValue = "true", matchIfMissing = false)
 public class FixConfig {
 
     @Bean
+    @ConditionalOnProperty(name = "fix.enabled", havingValue = "true", matchIfMissing = false)
     public SocketAcceptor socketAcceptor(FixServerApplication application) throws ConfigError {
         // Load configuration from classpath
         SessionSettings settings = new SessionSettings(

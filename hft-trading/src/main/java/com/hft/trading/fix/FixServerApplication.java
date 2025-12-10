@@ -1,12 +1,16 @@
 package com.hft.trading.fix;
 
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import quickfix.*;
 import quickfix.field.*;
 import quickfix.fix44.MarketDataRequest;
 import quickfix.fix44.MarketDataSnapshotFullRefresh;
 
+@Slf4j
 @Component
+@ConditionalOnProperty(name = "fix.enabled", havingValue = "true", matchIfMissing = false)
 public class FixServerApplication extends MessageCracker implements Application {
 
     @Override

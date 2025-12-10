@@ -10,6 +10,7 @@ import TradeForm from './components/TradeForm';
 import ProfitLossChart from './components/ProfitLossChart';
 import PerformanceMetrics from './components/PerformanceMetrics';
 import WalletPanel from './components/WalletPanel';
+import AccountDashboard from './components/AccountDashboard';
 import ExportButton from './components/ExportButton';
 
 function App() {
@@ -113,6 +114,7 @@ function App() {
 
     const tabs = [
         { id: 'overview', label: 'Overview' },
+        { id: 'account', label: 'Account' },
         { id: 'trade', label: 'Trade' },
         { id: 'analytics', label: 'Analytics' },
         { id: 'performance', label: 'Performance' },
@@ -221,6 +223,10 @@ function App() {
                                     <DashboardOverview stats={overview} />
                                     <VolumeChart chartData={volumeChart} />
                                 </>
+                            )}
+
+                            {activeTab === 'account' && (
+                                <AccountDashboard accountId={accountId} />
                             )}
 
                             {activeTab === 'trade' && (

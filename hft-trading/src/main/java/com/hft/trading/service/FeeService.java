@@ -8,6 +8,7 @@ import com.hft.account.repository.AccountRepository;
 import com.hft.account.service.AccountService;
 import com.hft.trading.repository.FeeConfigRepository;
 import com.hft.trading.repository.TieredFeeConfigRepository;
+import com.hft.trading.state.AccountStateStore;
 import java.math.BigDecimal;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -29,6 +30,7 @@ public class FeeService {
   private final TieredFeeConfigRepository tieredFeeConfigRepository;
   private final AccountRepository accountRepository;
   private final AccountService accountService;
+  private final AccountStateStore accountStateStore;
 
   // Cache for legacy fee configs (reload periodically)
   private final Map<String, FeeConfig> feeConfigCache = new ConcurrentHashMap<>();
@@ -95,7 +97,8 @@ public class FeeService {
 
     // Only deduct if fee is non-zero (VIP5 has 0% maker fee)
     if (fee.compareTo(BigDecimal.ZERO) > 0) {
-      accountService.deductLockedBalance(accountId, quoteAsset, fee);
+      var balance = accountService.deductLockedBalance(accountId, quoteAsset, fee);
+      accountStateStore.updateBalance(balance);
     }
 
     log.info(
@@ -122,7 +125,8 @@ public class FeeService {
   public BigDecimal deductTakerFee(String accountId, String symbol, BigDecimal tradeValue, String quoteAsset) {
     TieredFeeConfig config = getFeeConfigForAccount(symbol, accountId);
     BigDecimal fee = config.calculateTakerFee(tradeValue);
-    accountService.deductLockedBalance(accountId, quoteAsset, fee);
+    var balance = accountService.deductLockedBalance(accountId, quoteAsset, fee);
+    accountStateStore.updateBalance(balance);
     log.info(
         "Taker fee deducted: account={}, tier={}, symbol={}, fee={} {}",
         accountId,
