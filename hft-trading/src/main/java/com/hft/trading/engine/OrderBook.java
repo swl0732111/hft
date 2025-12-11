@@ -51,8 +51,20 @@ public class OrderBook {
                 break;
 
             // Match against orders in the level (FIFO)
+            // Match against orders in the level (FIFO)
             while (!level.isEmpty() && isPositive(order.getQuantityScaled())) {
                 Order match = level.peek();
+
+                // Self-Trade Prevention (STP): Cancel Maker Strategy
+                // If the incoming order matches an order from the same account, remove the
+                // existing order (Maker).
+                if (order.getAccountId() != null && match.getAccountId() != null &&
+                        order.getAccountId().equals(match.getAccountId())) {
+                    level.poll(); // Remove maker from level
+                    orderIndex.removeOrder(match.getId()); // Remove from index
+                    continue; // Skip trade, try next order
+                }
+
                 long tradeQuantity = min(order.getQuantityScaled(), match.getQuantityScaled());
 
                 // Fire callback instead of creating Trade object

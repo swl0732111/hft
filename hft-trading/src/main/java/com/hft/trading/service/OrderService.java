@@ -49,12 +49,22 @@ public class OrderService {
 
         // Lock balance for buy orders (synchronous for risk management)
         // This is the only blocking operation in the hot path
-        if (order.getSide() == Order.Side.BUY && order.getAccountId() != null) {
-            BigDecimal requiredAmount = order.getPrice().multiply(order.getQuantity());
+        if (order.getAccountId() != null) {
             String[] symbolParts = order.getSymbol().split("-");
+            String baseAsset = symbolParts[0];
             String quoteAsset = symbolParts.length > 1 ? symbolParts[1] : "USDC";
-            var balance = accountService.lockBalance(order.getAccountId(), quoteAsset, requiredAmount);
-            accountStateStore.updateBalance(balance);
+
+            if (order.getSide() == Order.Side.BUY) {
+                // Buy: Lock Quote Asset (Price * Qty)
+                BigDecimal requiredAmount = order.getPrice().multiply(order.getQuantity());
+                var balance = accountService.lockBalance(order.getAccountId(), quoteAsset, requiredAmount);
+                accountStateStore.updateBalance(balance);
+            } else {
+                // Sell: Lock Base Asset (Qty)
+                BigDecimal requiredAmount = order.getQuantity();
+                var balance = accountService.lockBalance(order.getAccountId(), baseAsset, requiredAmount);
+                accountStateStore.updateBalance(balance);
+            }
         }
 
         // Publish to RingBuffer (zero allocation, <100ns)
