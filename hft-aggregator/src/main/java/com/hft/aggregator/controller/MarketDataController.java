@@ -1,6 +1,8 @@
 package com.hft.aggregator.controller;
 
 import com.hft.aggregator.aggregator.OrderBookAggregator;
+import com.hft.aggregator.domain.ArrayOrderBook;
+import com.hft.aggregator.domain.SymbolDictionary;
 import com.hft.aggregator.dto.OrderBookDTO;
 import com.hft.aggregator.dto.QuoteDTO;
 import lombok.RequiredArgsConstructor;
@@ -22,12 +24,12 @@ public class MarketDataController {
     @GetMapping("/quote/{symbol}")
     public ResponseEntity<QuoteDTO> getQuote(@PathVariable String symbol) {
         // Resolve ID first
-        int symbolId = com.hft.aggregator.domain.SymbolDictionary.getId(symbol);
+        int symbolId = SymbolDictionary.getId(symbol);
         if (symbolId == -1) {
             return ResponseEntity.notFound().build();
         }
 
-        com.hft.aggregator.domain.ArrayOrderBook book = aggregator.getOrderBook(symbolId);
+        ArrayOrderBook book = aggregator.getOrderBook(symbolId);
         if (book == null || (book.getBidCount() == 0 && book.getAskCount() == 0)) {
             return ResponseEntity.notFound().build();
         }
@@ -49,12 +51,12 @@ public class MarketDataController {
     public ResponseEntity<OrderBookDTO> getOrderBook(@PathVariable String symbol,
             @RequestParam(defaultValue = "10") int depth) {
 
-        int symbolId = com.hft.aggregator.domain.SymbolDictionary.getId(symbol);
+        int symbolId = SymbolDictionary.getId(symbol);
         if (symbolId == -1) {
             return ResponseEntity.notFound().build();
         }
 
-        com.hft.aggregator.domain.ArrayOrderBook book = aggregator.getOrderBook(symbolId);
+        ArrayOrderBook book = aggregator.getOrderBook(symbolId);
         if (book == null) {
             return ResponseEntity.notFound().build();
         }
