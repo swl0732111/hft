@@ -24,7 +24,7 @@ jobs:
             echo "Missing required sync inputs"
             exit 1
           fi
-          payload="$(cat <<'EOF'
+          payload="$(cat <<EOF
           {
             "repo_full_name": "$REPO",
             "commit_sha": "$SHA"
